@@ -16,7 +16,24 @@
       display: grid; place-items: center; padding: 24px 16px;
     }
     main { width: min(440px, 100%); text-align: center; }
-    .icon { width: 128px; height: 128px; filter: drop-shadow(0 16px 28px rgba(90, 60, 10, .22)); }
+    .icon { width: 128px; height: 128px; display: block; margin: 0 auto; overflow: visible; filter: drop-shadow(0 16px 28px rgba(20, 20, 24, .22)); }
+    .face { width: 128px; margin: 0 auto; animation: pop .9s cubic-bezier(.2, 1.5, .4, 1) both, bob 5s ease-in-out .9s infinite; }
+    .icon * { transform-box: fill-box; transform-origin: center; }
+    .icon .brow { transition: transform .35s cubic-bezier(.2, 1.6, .4, 1); }
+    .icon .eye { transition: transform .35s cubic-bezier(.2, 1.6, .4, 1); }
+    .icon .lid { animation: none; }
+    .icon.blink .lid { animation: blink .18s ease-in-out; }
+    .icon .pupil { transition: transform .12s ease-out; }
+    body.eager .face { animation-play-state: running, paused; }
+    body.eager .icon .brow-l { transform: translateY(-14px) rotate(-6deg); }
+    body.eager .icon .brow-r { transform: translateY(-12px) rotate(4deg); }
+    body.eager .icon .eye-g { transform: scale(1.1); }
+    .icon.jump { animation: jump .6s cubic-bezier(.2, 1.4, .4, 1); }
+    @keyframes pop { from { transform: scale(.4) rotate(-12deg); opacity: 0; } to { transform: none; opacity: 1; } }
+    @keyframes bob { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-6px) rotate(-1.5deg); } }
+    @keyframes blink { 50% { transform: scaleY(.08); } }
+    @keyframes jump { 0% { transform: none; } 35% { transform: translateY(-18px) rotate(6deg) scale(1.04); } 70% { transform: translateY(2px) scaleY(.96); } 100% { transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .face, .icon, .icon * { animation: none !important; transition: none !important; } }
     h1 { margin-top: 18px; font-size: 34px; font-weight: 650; letter-spacing: -.02em; }
     .dl {
       display: inline-flex; align-items: center; gap: 10px; margin-top: 28px; padding: 13px 24px; border-radius: 999px;
@@ -28,7 +45,15 @@
 </head>
 <body>
   <main>
-    <img class="icon" src="icon.png?v=2" alt="" width="128" height="128">
+    <div class="face"><svg class="icon" viewBox="0 0 265 265" role="img" aria-label="WolandIDE">
+      <rect x="1.5" y="1.5" width="262" height="262" rx="58" fill="#19191b" stroke="#2f2f33" stroke-width="2.5"/>
+      <g stroke="#ededed" stroke-width="14" stroke-linecap="round">
+        <line class="brow brow-l" x1="52" y1="102" x2="120" y2="109"/>
+        <line class="brow brow-r" x1="145" y1="85" x2="210" y2="62"/>
+      </g>
+      <g class="lid"><circle cx="87" cy="161" r="30" fill="#050505" stroke="#4a4a50" stroke-width="7"/></g>
+      <g class="lid"><g class="eye eye-g"><circle cx="176" cy="159" r="38" fill="#c6f07a"/><circle class="pupil" cx="186" cy="148" r="11.5" fill="#050505"/></g></g>
+    </svg></div>
     <h1>WolandIDE</h1>
 
     <a class="dl" href="https://github.com/paul-metz/wolandide-site/releases/latest/download/WolandIDE-mac.dmg">
@@ -36,5 +61,27 @@
       Télécharger pour Mac
     </a>
   </main>
+  <script>
+    // The face: blinks now and then, its green eye follows the cursor, raises its brows at the button.
+    (() => {
+      const face = document.querySelector('.icon'), pupil = face.querySelector('.pupil'), dl = document.querySelector('.dl')
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+      const blink = () => { face.classList.remove('blink'); void face.getBoundingClientRect(); face.classList.add('blink'); setTimeout(blink, 2200 + Math.random() * 3800) }
+      setTimeout(blink, 1400)
+      addEventListener('pointermove', (e) => {
+        const r = face.getBoundingClientRect()
+        const dx = e.clientX - (r.left + r.width * 186 / 265), dy = e.clientY - (r.top + r.height * 148 / 265)
+        const d = Math.hypot(dx, dy) || 1, m = Math.min(1, d / 260) * 13
+        // Rest position sits up-right; pull the pupil toward the cursor, kept inside the green eye.
+        pupil.style.transform = `translate(${(dx / d) * m - 6}px, ${(dy / d) * m + 6}px)`
+      })
+      dl.addEventListener('pointerenter', () => document.body.classList.add('eager'))
+      dl.addEventListener('pointerleave', () => document.body.classList.remove('eager'))
+      const jump = () => { face.classList.remove('jump'); void face.getBoundingClientRect(); face.classList.add('jump') }
+      face.addEventListener('animationend', (e) => { if (e.animationName === 'jump') face.classList.remove('jump') })
+      face.addEventListener('click', jump)
+      dl.addEventListener('click', jump)
+    })()
+  </script>
 </body>
 </html>
