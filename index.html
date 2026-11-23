@@ -24,6 +24,18 @@
     .icon.blink .lid { animation: blink .18s ease-in-out; }
     .icon .pupil { transition: transform .12s ease-out; }
     body.eager .icon { animation-play-state: paused; }
+    .icon .brows { transition: transform .25s ease-out; }
+    /* Idle expressions, picked at random every few seconds. */
+    .icon[data-mood="curious"] .brow-r { transform: translateY(-10px) rotate(-5deg); }
+    .icon[data-mood="curious"] .brow-l { transform: translateY(3px) rotate(2deg); }
+    .icon[data-mood="doubt"] .brow-l { transform: translateY(-9px) rotate(-7deg); }
+    .icon[data-mood="doubt"] .brow-r { transform: translateY(5px) rotate(5deg); }
+    .icon[data-mood="focus"] .brow-l { transform: translateY(6px) rotate(6deg); }
+    .icon[data-mood="focus"] .brow-r { transform: translateY(7px) rotate(-6deg); }
+    .icon[data-mood="wow"] .brow-l { transform: translateY(-12px); }
+    .icon[data-mood="wow"] .brow-r { transform: translateY(-12px); }
+    .icon[data-mood="wiggle"] .brow-r { animation: wiggle .7s ease-in-out; }
+    @keyframes wiggle { 25% { transform: translateY(-9px) rotate(-4deg); } 50% { transform: translateY(0); } 75% { transform: translateY(-9px) rotate(-4deg); } }
     body.eager .icon .brow-l { transform: translateY(-14px) rotate(-6deg); }
     body.eager .icon .brow-r { transform: translateY(-12px) rotate(4deg); }
     body.eager .icon .eye-g { transform: scale(1.1); }
@@ -46,7 +58,7 @@
 <body>
   <div class="face">
     <svg class="icon" viewBox="30 40 205 180" preserveAspectRatio="xMidYMid meet" role="img" aria-label="WolandIDE">
-      <g stroke="#ededed" stroke-width="14" stroke-linecap="round">
+      <g class="brows" stroke="#ededed" stroke-width="14" stroke-linecap="round">
         <line class="brow brow-l" x1="52" y1="102" x2="120" y2="109"/>
         <line class="brow brow-r" x1="145" y1="85" x2="210" y2="62"/>
       </g>
@@ -70,14 +82,23 @@
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
       const blink = () => { face.classList.remove('blink'); void face.getBoundingClientRect(); face.classList.add('blink'); setTimeout(blink, 2200 + Math.random() * 3800) }
       setTimeout(blink, 1400)
+      const brows = face.querySelector('.brows'), moods = ['curious', 'doubt', 'focus', 'wow', 'wiggle']
+      const mood = () => {
+        if (!document.body.classList.contains('eager')) face.dataset.mood = moods[Math.floor(Math.random() * moods.length)]
+        setTimeout(() => { face.dataset.mood = '' }, 900 + Math.random() * 1400)
+        setTimeout(mood, 2600 + Math.random() * 3200)
+      }
+      setTimeout(mood, 2000)
       addEventListener('pointermove', (e) => {
         const r = iris.getBoundingClientRect()
         const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2)
         const d = Math.hypot(dx, dy) || 1, m = Math.min(1, d / r.width) * 20
         // Rest position sits up-right of the centre; move it toward the cursor, kept inside the green eye (SVG units).
         pupil.style.transform = `translate(${(dx / d) * m - 10}px, ${(dy / d) * m + 11}px)`
+        // The brows follow the gaze a little: up when looking up.
+        brows.style.transform = `translateY(${Math.max(-1, Math.min(1, dy / innerHeight * 2)) * 5}px)`
       })
-      dl.addEventListener('pointerenter', () => document.body.classList.add('eager'))
+      dl.addEventListener('pointerenter', () => { face.dataset.mood = ''; document.body.classList.add('eager') })
       dl.addEventListener('pointerleave', () => document.body.classList.remove('eager'))
       const jump = () => { face.classList.remove('jump'); void face.getBoundingClientRect(); face.classList.add('jump') }
       face.addEventListener('animationend', (e) => { if (e.animationName === 'jump') face.classList.remove('jump') })
