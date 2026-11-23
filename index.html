@@ -36,6 +36,10 @@
     .icon[data-mood="wow"] .brow-r { transform: translateY(-12px); }
     .icon[data-mood="wiggle"] .brow-r { animation: wiggle .7s ease-in-out; }
     @keyframes wiggle { 25% { transform: translateY(-9px) rotate(-4deg); } 50% { transform: translateY(0); } 75% { transform: translateY(-9px) rotate(-4deg); } }
+    /* The charmer: both brows up-down twice, quick, with a knowing squint. */
+    .icon[data-mood="charm"] .brow { animation: charm .9s cubic-bezier(.3, 1.4, .5, 1); }
+    .icon[data-mood="charm"] .eye-g { transform: scaleY(.82); }
+    @keyframes charm { 0%, 50%, 100% { transform: none; } 18%, 68% { transform: translateY(-16px); } }
     body.eager .icon .brow-l { transform: translateY(-14px) rotate(-6deg); }
     body.eager .icon .brow-r { transform: translateY(-12px) rotate(4deg); }
     body.eager .icon .eye-g { transform: scale(1.1); }
@@ -82,9 +86,11 @@
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
       const blink = () => { face.classList.remove('blink'); void face.getBoundingClientRect(); face.classList.add('blink'); setTimeout(blink, 2200 + Math.random() * 3800) }
       setTimeout(blink, 1400)
-      const brows = face.querySelector('.brows'), moods = ['curious', 'doubt', 'focus', 'wow', 'wiggle']
+      const brows = face.querySelector('.brows'), moods = ['charm', 'charm', 'curious', 'doubt', 'focus', 'wow', 'wiggle']
+      let first = true // the very first expression: the charmer
       const mood = () => {
-        if (!document.body.classList.contains('eager')) face.dataset.mood = moods[Math.floor(Math.random() * moods.length)]
+        if (!document.body.classList.contains('eager')) face.dataset.mood = first ? 'charm' : moods[Math.floor(Math.random() * moods.length)]
+        first = false
         setTimeout(() => { face.dataset.mood = '' }, 900 + Math.random() * 1400)
         setTimeout(mood, 2600 + Math.random() * 3200)
       }
